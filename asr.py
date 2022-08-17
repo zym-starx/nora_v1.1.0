@@ -131,8 +131,9 @@ def listen_print_loop(responses):
             else:
                 overwrite_chars = ' ' * (num_chars_printed - len(transcript))
                 print("## " + transcript + overwrite_chars + "\n")
+                asr_line = transcript + overwrite_chars
                 num_chars_printed = 0
-                return
+                return asr_line
 
         if partial_transcript != "":
             overwrite_chars = ' ' * (num_chars_printed - len(partial_transcript))
@@ -185,6 +186,6 @@ def main():
 
         responses = client.StreamingRecognize(build_generator(streaming_config, requests))
 
-        listen_print_loop(responses)
-        return
+        asr_line = listen_print_loop(responses)
+        return asr_line
         
