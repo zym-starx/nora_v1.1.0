@@ -40,3 +40,102 @@ model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 #answer_question("How are you doing today?")
 
 
+
+
+def analyze_intent():
+    channel = grpc.insecure_channel('localhost:50051')
+    riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
+
+    text = "How is the weather in New York tomorrow?"
+
+    req = rnlp.AnalyzeIntentRequest()
+    req.query = str(text)
+    req.options.domain = "weather"
+    
+    # The <domain_name> is appended to "riva_intent_" to look for a model "riva_intent_<domain_name>"
+    # So the model "riva_intent_<domain_name>" needs to be preloaded in riva server.
+    # In this case the domain is weather and the model being used is "riva_intent_weather-misc".
+
+    resp = riva_nlp.AnalyzeIntent(req)
+
+    #try:
+    #    req = rnlp.AnalyzeIntentRequest()
+    #    req.query = str(text)
+    #    # The <domain_name> is appended to "riva_intent_" to look for a model "riva_intent_<domain_name>"
+    #    # So the model "riva_intent_<domain_name>" needs to be preloaded in riva server.
+    #    # In this case the domain is weather and the model being used is "riva_intent_weather-misc".
+    #    req.options.domain = "weather"
+    #    resp = riva_nlp.AnalyzeIntent(req)
+    #except Exception as inst:
+    #    # An exception occurred
+    #    print("[Riva NLU] Error during NLU request")
+    #    return {'riva_error': 'riva_error'}
+
+    string_resp = ""
+    string_resp = str(resp)
+    
+    print(type(string_resp))
+    print(string_resp)
+
+
+    for line in string_resp.splitlines():
+        if line == "intent {":
+            for x in range(3) and line in string_resp.splitlines():
+
+
+
+    ##include <iostream>
+    ##include <vector>
+    #using namespace std;
+#
+#
+    #string line;
+    #struct nlp_object{
+    #    string intent;
+    #    vector<pair<string,string>> slots;
+    #    string domain;
+    #};
+#
+    #nlp_object query;
+#
+    #while(line = getline(input)){
+    #    if(line == "intent {"){
+    #        for (int i = 0; i < 3; i++){
+    #            line = getline(input);
+    #            line = 
+    #        }
+    #    }
+    #}
+
+                
+
+
+def analyze_entities():
+    channel = grpc.insecure_channel('localhost:50051')
+    riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
+
+    text = "Have you ever heard of 'Among Us' Gregory?"
+
+    req = rnlp.AnalyzeEntitiesRequest()
+    req.query = str(text)
+
+    resp = riva_nlp.AnalyzeEntities(req)
+    print(resp)
+    
+    
+def classify_text():
+    channel = grpc.insecure_channel('localhost:50051')
+    riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
+
+    query = "Have you ever heard of 'Among Us' Gregory?"
+
+    req = rnlp.TextClassRequest()
+    req.text(query)
+   
+
+    resp = riva_nlp.ClassifyText(req)
+    print(resp)
+
+#classify_text()
+
+analyze_intent()
