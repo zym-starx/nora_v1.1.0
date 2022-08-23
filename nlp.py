@@ -1,17 +1,16 @@
-# required imports
+# importing libraries
 import io
 import librosa
 from time import time
 import numpy as np
 import IPython.display as ipd
 import grpc
-import requests
-
 import riva_api.riva_nlp_pb2 as rnlp
 import riva_api.riva_nlp_pb2_grpc as rnlp_srv
 
-from sentence_transformers import SentenceTransformer, util
-model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
+
+import requests
+from bs4 import BeautifulSoup as bs
 
 #def answer_question(question):
 #    '''
@@ -56,17 +55,11 @@ query = {
     "weatherforecastdaily" : ""
 }
 
-class nlp_query:
-    intent = ""
-    slots = []
-    domain = ""
-
-
 def analyze_intent():
     channel = grpc.insecure_channel('localhost:50051')
     riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
 
-    text = "Is it cloudy in New York next week?"
+    text = "Is it cloudy in New York tomorrow?"
 
     req = rnlp.AnalyzeIntentRequest()
     req.query = str(text)
@@ -156,12 +149,92 @@ def analyze_intent():
 
     #for x in query:
     #    print(x , " -> ", query[x], "\n")
+    print(query.items())
 
-
+def weather_request_response1():
+    # enter city name
+    city = query["weatherplace"]
+    time = query["weathertime"]
+    
+    # creating url and requests instance
+    url = "https://www.google.com/search?q="+"weather"+city+time
+    html = requests.get(url).content
+    
+    # getting raw data
+    soup = bs(html, 'html.parser')
+    temp = soup.find('div', attrs={'class': 'BNeawe iBp4i AP7Wnd'}).text
+    str = soup.find('div', attrs={'class': 'BNeawe tAd8D AP7Wnd'}).text
+    
+    # formatting data
+    data = str.split('\n')
+    time = data[0]
+    sky = data[1]
+    
+    # getting all div tag
+    listdiv = soup.findAll('div', attrs={'class': 'BNeawe s3v9rd AP7Wnd'})
+    strd = listdiv[5].text
+    
+    # getting other required data
+    pos = strd.find('Wind')
+    other_data = strd[pos:]
+    
+    # printing all data
+    print("Temperature is", temp)
+    print("Time: ", time)
+    print("Sky Description: ", sky)
+    print(other_data)
         
+def weather_request_response2():
+    soup = bs(requests.get("https://www.google.com/search?q=weather+london").content)
+    soup.find("div", attrs={'id': 'wob_loc'}).text
+    soup.find("div", attrs={"id": "wob_dts"}).text
+    soup.find("span", attrs={"id": "wob_dc"}).text
 
+def get_weather_data(url):
+    USER_AGENT = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/94.0.4606.81 Safari/537.36"
+    # US english
+    LANGUAGE = "en-US,en;q=0.5"
 
-
+    session = requests.Session()
+    session.headers['User-Agent'] = USER_AGENT
+    session.headers['Accept-Language'] = LANGUAGE
+    session.headers['Content-Language'] = LANGUAGE
+    html = session.get(url)
+    # create a new soup
+    soup = bs(html.text, "html.parser")
+    # store all results on this dictionary
+    result = {}
+    # extract region
+    result['region'] = soup.find("div", attrs={"id": "wob_loc"}).text
+    # extract temperature now
+    result['temp_now'] = soup.find("span", attrs={"id": "wob_tm"}).text
+    # get the day and hour now
+    result['dayhour'] = soup.find("div", attrs={"id": "wob_dts"}).text
+    # get the actual weather
+    result['weather_now'] = soup.find("span", attrs={"id": "wob_dc"}).text
+        # get the precipitation
+    result['precipitation'] = soup.find("span", attrs={"id": "wob_pp"}).text
+    # get the % of humidity
+    result['humidity'] = soup.find("span", attrs={"id": "wob_hm"}).text
+    # extract the wind
+    result['wind'] = soup.find("span", attrs={"id": "wob_ws"}).text
+        # get next few days' weather
+    next_days = []
+    days = soup.find("div", attrs={"id": "wob_dp"})
+    for day in days.findAll("div", attrs={"class": "wob_df"}):
+        # extract the name of the day
+        day_name = day.findAll("div")[0].attrs['aria-label']
+        # get weather status for that day
+        weather = day.find("img").attrs["alt"]
+        temp = day.findAll("span", {"class": "wob_t"})
+        # maximum temparature in Celsius, use temp[1].text if you want fahrenheit
+        max_temp = temp[0].text
+        # minimum temparature in Celsius, use temp[3].text if you want fahrenheit
+        min_temp = temp[2].text
+        next_days.append({"name": day_name, "weather": weather, "max_temp": max_temp, "min_temp": min_temp})
+    # append to result
+    result['next_days'] = next_days
+    return result
 
 def analyze_entities():
     channel = grpc.insecure_channel('localhost:50051')
@@ -174,7 +247,6 @@ def analyze_entities():
 
     resp = riva_nlp.AnalyzeEntities(req)
     print(resp)
-    
     
 def classify_text():
     channel = grpc.insecure_channel('localhost:50051')
@@ -189,6 +261,35 @@ def classify_text():
     resp = riva_nlp.ClassifyText(req)
     print(resp)
 
-#classify_text()
-
 analyze_intent()
+#weather_request_response2()
+if __name__ == "__main__":
+    URL = "https://www.google.com/search?lr=lang_en&ie=UTF-8&q=weather"
+    #import argparse
+    #parser = argparse.ArgumentParser(description="Quick Script for Extracting Weather data using Google Weather")
+    #parser.add_argument("region", nargs="?", help="""Region to get weather for, must be available region.
+    #                                    Default is your current location determined by your IP Address""", default="")
+    ## parse arguments
+    #args = parser.parse_args()
+    #region = args.region
+    URL += query["weatherplace"] + query["weatherforecastdaily"] + query["weathertime"]
+    # get data
+    data = get_weather_data(URL)
+
+        # print data
+    print("Weather for:", data["region"])
+    print("Now:", data["dayhour"])
+    print(f"Temperature now: {data['temp_now']}°C")
+    print("Description:", data['weather_now'])
+    print("Precipitation:", data["precipitation"])
+    print("Humidity:", data["humidity"])
+    print("Wind:", data["wind"])
+    #print("Next days:")
+    #for dayweather in data["next_days"]:
+    #    print("="*40, dayweather["name"], "="*40)
+    #    print("Description:", dayweather["weather"])
+    #    print(f"Max temperature: {dayweather['max_temp']}°C")
+    #    print(f"Min temperature: {dayweather['min_temp']}°C")
+
+
+
