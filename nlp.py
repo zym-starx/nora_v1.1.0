@@ -40,13 +40,33 @@ model = SentenceTransformer('paraphrase-MiniLM-L6-v2')
 #answer_question("How are you doing today?")
 
 
+query = {
+    "intent" : "",
+    "domain" : "",
+
+    "O" : "",
+    "weathertime" : "today",
+    "weatherplace" : "ankara",
+    "temperatureunit" : "",
+    "current_location" : "",
+    "wind_speed_unit" : "",
+    "rainfallunit" : "",
+    "snowunit" : "",
+    "alert_type" : "",
+    "weatherforecastdaily" : ""
+}
+
+class nlp_query:
+    intent = ""
+    slots = []
+    domain = ""
 
 
 def analyze_intent():
     channel = grpc.insecure_channel('localhost:50051')
     riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
 
-    text = "How is the weather in New York tomorrow?"
+    text = "Is it cloudy in New York next week?"
 
     req = rnlp.AnalyzeIntentRequest()
     req.query = str(text)
@@ -74,40 +94,73 @@ def analyze_intent():
     string_resp = ""
     string_resp = str(resp)
     
-    print(type(string_resp))
-    print(string_resp)
+    #print(type(string_resp))
+    #print(string_resp)
+    #line.replace("class_name: ", "")
+    #line.replace('""', "")
+    #print(line)
 
+    main = ""
 
-    for line in string_resp.splitlines():
-        if line == "intent {":
-            for x in range(3) and line in string_resp.splitlines():
+    #for line in string_resp.splitlines():
+    #    if line == "intent {":
+    #        main = "intent"
+    #        for x in range(3):
+    #            if "class_name:" in line:
+                    
+    smth = string_resp.split("}")
 
+    for x in smth:
+        main = ""
+        token = ""
+        class_name = ""
+        if x.find('  token: "?"') != -1:
+            continue
 
+        for line in x.splitlines():
+            if line == "":
+                continue
+            elif line == "slots {":
+                main = "slot"
+            elif line == "intent {":
+                main = "intent"
+            elif line == 'domain_str: "weather"':
+                main = "domain"
+            else:
+                if line.find("token") != -1:
+                    line = line.replace("token: ", "")
+                    line = line.replace('"', "")
+                    line = line.replace('   ', "")
+                    line = line.replace(' ', "")
+                    if line == "?":
+                        continue
+                    else:
+                        token = line
 
-    ##include <iostream>
-    ##include <vector>
-    #using namespace std;
-#
-#
-    #string line;
-    #struct nlp_object{
-    #    string intent;
-    #    vector<pair<string,string>> slots;
-    #    string domain;
-    #};
-#
-    #nlp_object query;
-#
-    #while(line = getline(input)){
-    #    if(line == "intent {"){
-    #        for (int i = 0; i < 3; i++){
-    #            line = getline(input);
-    #            line = 
-    #        }
-    #    }
-    #}
-
+                elif line.find("class_name:") != -1:
+                    line = line.replace("class_name: ", "")
+                    line = line.replace('"', "")
+                    line = line.replace('   ', "")
+                    line = line.replace(' ', "")
+                    class_name = line
                 
+                else:
+                    continue
+        
+        if main == "slot":
+            query[class_name] = token
+        elif main == "intent":
+            query['intent'] = class_name
+        elif main == "domain":
+            query['domain'] = class_name
+
+    #for x in query:
+    #    print(x , " -> ", query[x], "\n")
+
+
+        
+
+
 
 
 def analyze_entities():
