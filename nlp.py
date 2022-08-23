@@ -55,11 +55,9 @@ query = {
     "weatherforecastdaily" : ""
 }
 
-def analyze_intent():
+def analyze_intent(text):
     channel = grpc.insecure_channel('localhost:50051')
     riva_nlp = rnlp_srv.RivaLanguageUnderstandingStub(channel)
-
-    text = "Is it cloudy in New York tomorrow?"
 
     req = rnlp.AnalyzeIntentRequest()
     req.query = str(text)
@@ -261,9 +259,12 @@ def classify_text():
     resp = riva_nlp.ClassifyText(req)
     print(resp)
 
-analyze_intent()
-#weather_request_response2()
-if __name__ == "__main__":
+def return_response(user_input):
+
+    resp = "I couldn't understand what you mean."
+
+    analyze_intent(user_input)
+
     URL = "https://www.google.com/search?lr=lang_en&ie=UTF-8&q=weather"
     #import argparse
     #parser = argparse.ArgumentParser(description="Quick Script for Extracting Weather data using Google Weather")
@@ -276,20 +277,68 @@ if __name__ == "__main__":
     # get data
     data = get_weather_data(URL)
 
-        # print data
-    print("Weather for:", data["region"])
-    print("Now:", data["dayhour"])
-    print(f"Temperature now: {data['temp_now']}°C")
-    print("Description:", data['weather_now'])
-    print("Precipitation:", data["precipitation"])
-    print("Humidity:", data["humidity"])
-    print("Wind:", data["wind"])
+    if query["intent"] ==  "weather.weather":
+        resp = "Weather for: " + data["region"] + ". " + data['weather_now'] + ". " + "Temperature now is " + data['temp_now'] + " celcius. " + "Precipitation " + data["precipitation"] + ". Humidity " + data["humidity"] + " and Wind is "+  data["wind"]
+        
+    elif query["intent"] == "weather.temperature":
+        resp = "Temperature of " + data["region"] + "is " + data['temp_now'] + "celcius." 
+
+    elif query["intent"] == "weather.Temperature_yes_no":
+        resp = "I'm sorry I didn't understand what you mean."
+
+    elif query["intent"] == "weather.rainfall":
+        resp = "Precipitation is " + data["precipitation"]
+
+    elif query["intent"] == "weather.rainfall_yes_no":
+        resp = "Precipitation is " + data["precipitation"]
+
+    elif query["intent"] == "weather.snow":
+        resp = "Sorry. I cannot look for snow right now"
+
+    elif query["intent"] == "weather.snow_yes_no":
+        resp = "Sorry. I cannot look for snow right now"
+
+    elif query["intent"] == "weather.humidity":
+        resp = "Humidity is " + data["humidity"]
+
+    elif query["intent"] == "weather.humidity_yes_no":
+        resp = "Humidity is " + data["humidity"]
+
+    elif query["intent"] == "weather.windspeed":
+        resp = "Wind is "+  data["wind"]
+
+    elif query["intent"] == "weather.sunny":
+        if data["weather_now"] == "Bulutlu":
+            resp = "No it is cloudy."
+        elif data["weather_now"] == "Güneşli":
+            resp = "Yes it is sunny."
+
+    elif query["intent"] == "weather.cloudy":
+        if data["weather_now"] == "Güneşli":
+            resp = "No it is sunny."
+        elif data["weather_now"] == "Bulutlu":
+            resp = "Yes it is cloudy."
+
+    elif query["intent"] == "weather.context":
+        resp = "Weather for: " + data["region"] + ". " + data['weather_now'] + ". " + "Temperature now is " + data['temp_now'] + " celcius. " + "Precipitation " + data["precipitation"] + ". Humidity " + data["humidity"]+ " and Wind is "+  data["wind"]
+
+    # print data
+    #print("Weather for:", data["region"])
+    #print("Now:", data["dayhour"])
+    #print(f"Temperature now: {data['temp_now']}°C")
+    #print("Description:", data['weather_now'])
+    #print("Precipitation:", data["precipitation"])
+    #print("Humidity:", data["humidity"])
+    #print("Wind:", data["wind"])
     #print("Next days:")
     #for dayweather in data["next_days"]:
     #    print("="*40, dayweather["name"], "="*40)
     #    print("Description:", dayweather["weather"])
     #    print(f"Max temperature: {dayweather['max_temp']}°C")
     #    print(f"Min temperature: {dayweather['min_temp']}°C")
+
+    return resp
+
 
 
 
