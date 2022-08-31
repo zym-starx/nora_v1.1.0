@@ -142,7 +142,7 @@ def listen_print_loop(responses):
             num_chars_printed = len(partial_transcript) + 3
 
 
-def main():
+def asr():
     args = get_args()
 
     if args.list_devices:
@@ -190,4 +190,4 @@ def main():
     if asr_line == None:
         return "no input"
     else:
-        return asr_line    
+        return asr_line
