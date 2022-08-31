@@ -185,7 +185,9 @@ def main():
                 yield x
 
         responses = client.StreamingRecognize(build_generator(streaming_config, requests))
-
         asr_line = listen_print_loop(responses)
-        return asr_line
         
+    if asr_line == None:
+        return "no input"
+    else:
+        return asr_line    

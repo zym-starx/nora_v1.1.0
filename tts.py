@@ -20,7 +20,7 @@ def tts(query):
     current_time = current_time.replace(":", "-")
 
     datestr = "noraAnswer_" + current_time + "_" + current_date + ".wav"
-    path = "C:/Users/Ömer KAVLAKOĞLU/Desktop/Unreal engine/Nora_v110/Script/nora_v1.1.0/testsounds/" + datestr 
+    path = "C:/Program Files/Epic Games/UE_5.0/Engine/Binaries/ThirdParty/Python3/Win64/Scripts/nora_v1.1.0/testsounds/" + datestr 
 
     sample_rate_hz = 44100
     resp = riva_tts.synthesize(
