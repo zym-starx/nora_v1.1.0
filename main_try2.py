@@ -105,6 +105,8 @@ def user_bye(user_input):
     global cont
     if (user_input.find("goodbye") != -1 or user_input.find("Goodbye") != -1):
         cont = False
+    elif (user_input.find("good bye") != -1):
+        cont = False
     else:
         cont = True
 
@@ -124,16 +126,16 @@ def main():
         mode = "TTS"
 
     elif(mode == "MID"):
-        root.after(500, Mid, txt)
+        root.after(100, Mid, txt)
         exmode = "MID"
         mode = "TTS"
-        Speaking(root)
+        Standby(root)
 
     elif(mode == "END"):
-        root.after(500, Closing, txt)
-
+        root.after(100, Closing, txt)
         exmode = "END"
         mode = "TTS"
+        Speaking(root)
     
     elif(mode == "ASR"):
         Listening(root)
@@ -156,7 +158,6 @@ def main():
     elif(mode == "TTS"):
         Speaking(root)
         root.after(100, TTS)
-        Standby(root)
 
         if (exmode == "OP"):
             mode = "ASR"
