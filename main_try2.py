@@ -14,10 +14,21 @@ TEXT_COLOR = "#FFFFFF"
 FONT = "Helvetica 14"
 FONT_BOLD = "Helvetica 13 bold"
 
+root = Tk()
+root.title("Nora")
+root.geometry("560x800")
+cont = True
+txt = Text(root, bg="#050910", fg=TEXT_COLOR, font=FONT, width=50, height=32)
+txt.grid(row=1, column=0, columnspan=2)
+scrollbar = Scrollbar(txt)
+scrollbar.place(relheight=1, relx=0.974)
+lable1 = Label(root, bg="#D0C9D2", fg=TEXT_COLOR, text="Nora", font=FONT_BOLD, width=50, height=2).grid(row=0)
+myLabel = Label(root, bg="#BAADBF", fg=TEXT_COLOR, text="Standby", font=FONT_BOLD, width=50, height=2).grid(row=2)
+
 #open_line = ""
 #closing_line = ""
-nora_answer = ""
 #mid_line = ""
+nora_answer = ""
 user_input = ""
 
 mode = "OP" # OP / MID / END / ASR / NLP / TTS
@@ -57,6 +68,7 @@ def Speaking(root):
     myLabel = Label(root, bg="#3D5340", fg=TEXT_COLOR, text=tex, font=FONT_BOLD, width=50, height=2).grid(row=2)
 
 def Opening(txt):
+    global nora_answer
     nora_answer = openingact.opening_act()
     txt.insert(END, "\n" + "Nora -> " + nora_answer)
 
@@ -69,8 +81,10 @@ def ASR(txt):
 def NLP():
     global nora_answer
     nora_answer = nlp.return_response(user_input)
+    txt.insert(END, "\n" + "Nora -> " + nora_answer)
 
-def TTS(nora_answer):
+def TTS():
+    global nora_answer
     nora_answer_tts = tts.tts(nora_answer)
     nora_answer_tts = "testsounds/" + nora_answer_tts
     time.sleep(1)
@@ -86,45 +100,37 @@ def Closing(txt):
     nora_answer = mid_end_acts.closing_act()
     txt.insert(END, "\n" + "Nora -> " + nora_answer)
 
-def user_bye(user_input, cont):
+def user_bye(user_input):
     user_input = str(user_input)
-    if (user_input.find("goodbye") or user_input.find("Goodbye")):
+    global cont
+    if (user_input.find("goodbye") != -1 or user_input.find("Goodbye") != -1):
         cont = False
     else:
         cont = True
 
+def empty():
+    return
+
 def main():
-    root = Tk()
-    root.title("Nora")
-    root.geometry("560x800")
-    cont = True
-    did_open = False
+    global myLabel
+    global mode, exmode, nora_answer, user_input, cont
+
     myLabel = Label(root)
-
-    lable1 = Label(root, bg="#D0C9D2", fg=TEXT_COLOR, text="Nora", font=FONT_BOLD, width=50, height=2).grid(row=0)
-
-    txt = Text(root, bg="#050910", fg=TEXT_COLOR, font=FONT, width=50, height=32)
-    txt.grid(row=1, column=0, columnspan=2)
-    scrollbar = Scrollbar(txt)
-    scrollbar.place(relheight=1, relx=0.974)
-
-    myLabel = Label(root, bg="#BAADBF", fg=TEXT_COLOR, text="Standby", font=FONT_BOLD, width=50, height=2).grid(row=2)
-
 
     if(mode == "OP"):
         Standby(root)   
-        root.after(1000, Opening)
+        root.after(1000, Opening, txt)
         exmode = "OP"
         mode = "TTS"
 
     elif(mode == "MID"):
-        root.after(500, Mid)
+        root.after(500, Mid, txt)
         exmode = "MID"
         mode = "TTS"
-        Speaking()
+        Speaking(root)
 
     elif(mode == "END"):
-        root.after(500, Closing)
+        root.after(500, Closing, txt)
 
         exmode = "END"
         mode = "TTS"
@@ -148,8 +154,9 @@ def main():
             mode = "TTS"
 
     elif(mode == "TTS"):
-        root.after(500, TTS, nora_answer)
-        Not_listening()
+        Speaking(root)
+        root.after(500, TTS)
+        Standby(root)
 
         if (exmode == "OP"):
             mode = "ASR"
@@ -157,10 +164,12 @@ def main():
             mode = "ASR"
         elif (exmode == "END"):
             mode = "none"
+            time.sleep(5)
             root.destroy()
         elif (exmode == "NLP"):
-            mode = "ASR"
+            mode = "MID"
 
+    root.after(1000, main)
     root.mainloop()
 
 if __name__ == '__main__':
