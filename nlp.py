@@ -263,6 +263,9 @@ def return_response(user_input):
 
     resp = "I couldn't understand what you mean."
 
+    if (user_input == ""):
+        return resp
+
     analyze_intent(user_input)
 
     URL = "https://www.google.com/search?lr=lang_en&ie=UTF-8&q=weather"
