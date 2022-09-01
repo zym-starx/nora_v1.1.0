@@ -191,3 +191,5 @@ def asr():
         return "no input"
     else:
         return asr_line
+
+asr()
