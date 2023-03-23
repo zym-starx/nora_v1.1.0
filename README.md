@@ -3,8 +3,8 @@
 A voluntary summer internship's project. Made with NVIDIA's Riva. 
 
 This repository includes all my attempts. The "main working one" is main.py. 
-Riva should be downloaded and run on port: 50051 to run this. ASR-NLP-TTS models should be included 
-to the download by changing the config file. 
+Riva should be downloaded and run on port: 50051 to run this. 
+ASR-NLP-TTS models should be included to the download of Riva by changing the **config file of Riva**. 
 
 In nlp models BERT (weather) one should be enough since this project only answers to that topic.
 
